@@ -1,7 +1,5 @@
 # %%
-
 import cupy as cp
-
 
 class CDArray(cp.ndarray): ...
 

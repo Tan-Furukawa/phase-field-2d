@@ -1,4 +1,4 @@
-#%%
+# %%
 import cupy as cp
 import numpy as np
 from numpy.typing import NDArray
@@ -10,7 +10,9 @@ from phase_field_2d.prepare_fft import prepare_fft
 import phase_field_2d.plot as myplt
 import phase_field_2d.save as mysave
 
+
 class CDArray(cp.ndarray): ...
+
 
 class PhaseField:
     """2D phase field modeling of non elastic system"""
@@ -27,13 +29,13 @@ class PhaseField:
         self.w = w
         self.c0 = c0
 
-        self.Nx = 256
-        self.Ny = 256
+        self.Nx = 128
+        self.Ny = 128
         self.dx: float = 1.0
         self.dy: float = 1.0
-        self.nstep: int = 20000
+        self.nstep: int = 40000
         self.nprint: int = 1000
-        self.dtime: float = 1e-2
+        self.dtime: float = 1e-3
         self.ttime: float = 0.0
         self.coefA: float = 1.0
         self.mobility: float = 1.0
@@ -41,25 +43,22 @@ class PhaseField:
         self.noise: float = 0.01
 
         # constant
-        self.R:float = 8.31446262
-        self.istep:int = 0
+        self.R: float = 8.31446262
+        self.istep: int = 0
 
     def update(self) -> None:
-        """update properties computed from the variables defined in __init__().
-        """
+        """update properties computed from the variables defined in __init__()."""
         self.prepare_result_array()
         self.calc_fft_parameters()
         self.set_initial_distribution()
 
     def start(self) -> None:
-        """start all computation.
-        """
+        """start all computation."""
         self.update()
         self.compute_phase_field()
 
     def prepare_result_array(self) -> None:
-        """prepare the computation result matrix and array.
-        """
+        """prepare the computation result matrix and array."""
         self.energy_g = np.zeros(self.nstep) + np.nan
         self.energy_el = np.zeros(self.nstep) + np.nan
 
@@ -94,14 +93,12 @@ class PhaseField:
         return kx, ky, k2, k4
 
     def set_initial_distribution(self) -> None:
-        """calculate initial composition and set to the property.
-        """
+        """calculate initial composition and set to the property."""
         con = make_initial_distribution(self.Nx, self.Ny, self.c0, self.noise)
         self.con = cp.array(con)
 
     def compute_phase_field(self) -> None:
-        """compute main part of phase field.
-        """
+        """compute main part of phase field."""
         for istep in range(1, self.nstep + 1):
             self.istep = istep
 
@@ -136,11 +133,11 @@ class PhaseField:
                 con_res = self.con.transpose()
                 con_disp = np.flipud(con_res)
                 myplt.get_matrix_image(cp.asnumpy(con_disp), show=False)
-                plt.savefig("test.pdf")
+                plt.show()
+                # plt.savefig("test.pdf")
 
-    def summary (self)-> None:
-        """ result summary at t=istep
-        """
+    def summary(self) -> None:
+        """result summary at t=istep"""
         print("-------------------------------------")
         print(f"phase filed result at t={self.istep}")
         print("-------------------------------------")
@@ -153,15 +150,18 @@ class PhaseField:
         print(f"composition distribution result at t={self.istep}")
         myplt.plot_con_hist(con)
 
-    def save (self)->None:
+    def save(self) -> None:
         mysave.create_directory("result")
         dirname = mysave.make_dir_name()
         mysave.create_directory(f"result/{dirname}")
-        np.save(f"result/{dirname}/con_c0_{self.c0}-w_{self.w}-T_{self.T}-t_{int(self.istep*self.dtime)}.npy", self.con)
+        np.save(
+            f"result/{dirname}/con_c0_{self.c0}-w_{self.w}-T_{self.T}-t_{int(self.istep*self.dtime)}.npy",
+            self.con,
+        )
 
 
 if __name__ == "__main__":
-    phase_field = PhaseField(3.0, 300, 0.4)
+    phase_field = PhaseField(4.0, 600, 0.5)
     phase_field.start()
 
 

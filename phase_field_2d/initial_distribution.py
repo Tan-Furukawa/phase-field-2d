@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 from numpy.typing import NDArray
+#%%
 
 
 def make_initial_distribution(
