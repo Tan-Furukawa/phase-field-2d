@@ -5,9 +5,15 @@ from numpy.typing import NDArray
 
 
 def prepare_fft(
-    Nx: int, Ny: int, dx: float, dy: float
+    Nx: int, Ny: int, dx: float, dy: float, eta: NDArray = np.array([1.0, 1.0, 0.0])
 ) -> tuple[
-    NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64],
 ]:
     """prepare wave vectors and the related tensors for FFT
 
@@ -16,6 +22,7 @@ def prepare_fft(
         Ny (int): number of ky vector
         dx (float): discrete size of x
         dy (float): discrete size of y
+        eta (NDArray): k11, k22, k12
 
     ## Returns:
         Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]: kx (vector), ky(vector), k2(tensor), k4(tensor). k2 = kx[i]**2 + ky[j]**2, k4 = k2**2
@@ -56,14 +63,25 @@ def prepare_fft(
     ky = ky[:Ny]
 
     k2 = np.zeros((Nx, Ny))
+    k2_anisotropy = np.zeros((Nx, Ny))
     k4 = np.zeros((Nx, Ny))
+    k4_anisotropy = np.zeros((Nx, Ny))
+    k6 = np.zeros((Nx, Ny))
+    eta_xx = eta[0]
+    eta_yy = eta[1]
+    eta_xy = eta[2]
 
     for i in range(Nx):
         for j in range(Ny):
             k2[i, j] = kx[i] ** 2 + ky[j] ** 2
+            k2_anisotropy[i, j] = (
+                eta_xx * kx[i] ** 2 + eta_yy * ky[j] ** 2 + 2 * eta_xy * kx[i] * ky[j]
+            )
+            k4_anisotropy[i, j] = k2[i, j] * k2_anisotropy[i, j]
             k4[i, j] = k2[i, j] ** 2
+            k6[i, j] = k4[i, j] * k2[i, j]
 
-    return kx, ky, k2, k4
+    return kx, ky, k2, k4, k6, k2_anisotropy, k4_anisotropy
 
 
 if __name__ == "__main__":
