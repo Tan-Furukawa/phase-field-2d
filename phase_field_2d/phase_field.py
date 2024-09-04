@@ -11,6 +11,7 @@ import phase_field_2d.plot as mplt
 import phase_field_2d.save as mysave
 from typing import Literal
 
+
 class CDArray(cp.ndarray): ...
 
 
@@ -32,6 +33,7 @@ class PhaseField:
             self (Self): Self
             w (float): Margulus parameter
         """
+        self.seed = 123
         self.w = w
         self.c0 = c0
         self.method = method
@@ -120,7 +122,9 @@ class PhaseField:
 
     def set_initial_distribution(self) -> None:
         """calculate initial composition and set to the property."""
-        con = make_initial_distribution(self.Nx, self.Ny, self.c0, self.noise)
+        con = make_initial_distribution(
+            self.Nx, self.Ny, self.c0, self.noise, seed=self.seed
+        )
         self.con = cp.array(con)
 
     def compute_phase_field(self) -> None:
@@ -239,12 +243,11 @@ if __name__ == "__main__":
     # phase_field.nstep = 1000
     # phase_field.nprint = 200
     phase_field.start()
-    #%%
+    # %%
 
     mat = np.load("result/output_2024-08-31-15-19-33/con_10000.npy")
     PhaseField.print(mat)
     # plt.imshow(mat)
-
 
 
 # %%
